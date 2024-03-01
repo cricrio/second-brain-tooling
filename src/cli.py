@@ -1,32 +1,39 @@
-from pathlib import Path
 from urllib.parse import urlparse
 
 import inquirer
 
 from bookmark.parsers.common import fetch_metadata
-from note.storage import Storage
 from note.templating import TemplateEngine
+from storage.abstract_storage import Storage, Template
+
+
+def get_template_by_name(templates: list[Template], template_name: str) -> Template:
+    for t in templates:
+        if t.name == template_name:
+            return t
+    raise Exception('template not found')
 
 
 def note_creation_prompt(storage: Storage, template_engine: TemplateEngine):
-    paths = storage.list_templates()
+    templates = storage.list_templates()
 
     questions = [
         inquirer.List(
             'template',
             message="Choose a template",
-            choices=list(map(lambda f: f.name, paths))
+            choices=list(map(lambda f: f.name, templates))
         ),
         inquirer.Text('name', message='Enter the title')
     ]
 
     answers = inquirer.prompt(questions)
-    template_path = list(filter(lambda x: x.name == answers.get('template'), paths))[0]
-    template = storage.read_template(template_path)
+    template = get_template_by_name(templates, answers.get('template'))
+    print(dir(template), type(template))
+    template_content = template.read_template()
     note_name = answers.get('name')
-    note_content = template_engine.format(template, {'title': note_name})
+    note_content = template_engine.format(template_content, {'title': note_name})
 
-    storage.create_note(note_content, note_name, folder=Path('notes'))
+    storage.create_note(note_content, note_name, folder='notes')
 
 
 def is_valid_url(_, url: str):
@@ -38,7 +45,7 @@ def bookmark_prompt(storage: Storage, template_engine: TemplateEngine):
     url = inquirer.text('Enter the url', validate=is_valid_url)
     metadata = fetch_metadata(url)
     note = template_engine.format([], metadata=metadata)
-    storage.create_note(note, url, folder=Path('bookmarks'))
+    storage.create_note(note, url, folder='bookmarks')
 
 
 def cli(storage: Storage, template_engine: TemplateEngine):

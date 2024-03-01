@@ -1,10 +1,8 @@
-from pathlib import Path
-
 from cli import cli
-from note.storage import Storage
 from note.templating import TemplateEngine
+from storage.github_storage import GithubStorage
 
-storage = Storage(Path('../docs'))
+storage = GithubStorage()
 template_engine = TemplateEngine()
 
 cli(storage, template_engine)
