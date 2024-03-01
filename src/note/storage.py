@@ -1,3 +1,4 @@
+import urllib.parse
 from pathlib import Path
 
 
@@ -6,7 +7,7 @@ def list_markdown_files(path: Path) -> list[Path]:
 
 
 def get_filename(title: str):
-    return '-'.join(title.casefold().split(' '))
+    return urllib.parse.quote_plus('-'.join(title.casefold().split(' ')))
 
 
 class Storage:
@@ -27,8 +28,9 @@ class Storage:
         file.close()
         return lines
 
-    def create_note(self, content: list[str], title: str):
-        path = self.doc_path / f"{get_filename(title)}.md"
+    def create_note(self, content: list[str], title: str, folder: Path = None):
+        path = self.doc_path / folder if folder else self.doc_path
+        path = path / f"{get_filename(title)}.md"
         file = path.open('w+')
         file.writelines(content)
         file.close()

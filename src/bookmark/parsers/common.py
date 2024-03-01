@@ -4,7 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def instagram_parser(url: str) -> list[tuple[str, str]]:
+def fetch_metadata(url: str) -> dict[str, str]:
     """
     Fetch the page and retrieve the og tags
 
@@ -13,7 +13,7 @@ def instagram_parser(url: str) -> list[tuple[str, str]]:
     page = requests.get(url)
     soup = BeautifulSoup(page.text, 'html.parser')
 
-    tags = []
+    tags = {}
     for tag in soup.find_all(property=re.compile('^og')):
-        tags.append((tag['property'], tag['content']))
+        tags[tag['property']] = tag['content']
     return tags
